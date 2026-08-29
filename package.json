@@ -2,7 +2,7 @@
   "name": "jobapex",
   "version": "1.0.0",
   "description": "JobApex — your job search at its peak. A specialized AI job-search assistant that tracks every application, auto-applies, and handles outreach. Built on the CodeApex agent foundation: LangChain Deep Agents in pure TypeScript with durable threads, auto-memory, and skills. Runs on local Ollama.",
-  "main": "index.js",
+  "main": "out/main/index.js",
   "bin": {
     "hermes": "bin/hermes.js"
   },
@@ -10,6 +10,9 @@
     "doc": "docs"
   },
   "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite dev",
+    "build": "electron-vite build",
     "test": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "smoke": "tsx scripts/smoke.ts",
@@ -49,13 +52,21 @@
     "deepagents": "^1.12.2",
     "duck-duck-scrape": "^2.2.7",
     "langchain": "^1.5.5",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^44.0.0",
+    "electron-vite": "^5.0.0",
     "openwiki": "^0.3.1",
     "tsx": "^4.23.11",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6"
   },
   "repository": {
     "type": "git",
