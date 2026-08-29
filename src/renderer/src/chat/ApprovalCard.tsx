@@ -57,9 +57,14 @@ export function ApprovalCard({ store }: { store: ChatStore }) {
   };
 
   const submitRejectOrEdit = () => {
+    // In edit mode an empty submit falls back to the original command rather
+    // than sending an empty `command: ""` to the shell. (Reject mode's own
+    // empty-string case is already handled: it falls back to DEFAULT_REJECT.)
+    const editedCommand =
+      mode === "edit" && input.trim() === "" ? String(action.args.command ?? "") : input;
     const decision: HITLDecisionWire =
       mode === "edit"
-        ? { type: "edit", editedAction: { name: action.name, args: { ...action.args, command: input } } }
+        ? { type: "edit", editedAction: { name: action.name, args: { ...action.args, command: editedCommand } } }
         : { type: "reject", message: input.trim() || DEFAULT_REJECT };
     const all = [...decisions, decision];
     if (all.length >= actions.length) resolve(all);
@@ -82,7 +87,7 @@ export function ApprovalCard({ store }: { store: ChatStore }) {
     // non-modal leaves the header's "New thread" (cancel + reset) clickable so
     // a hung gate can always be escaped.
     <Dialog open modal={false} onOpenChange={() => {}}>
-      <DialogContent>
+      <DialogContent hideClose>
         <DialogHeader>
           <DialogTitle>⚠ approval needed — agent wants to run</DialogTitle>
           <DialogDescription>
