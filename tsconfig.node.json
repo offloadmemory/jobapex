@@ -4,7 +4,19 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@shared/*": [
+        "./src/shared/*.js"
+      ]
+    }
   },
-  "include": ["src/main/**/*.ts", "src/preload/**/*.ts", "src/shared/**/*.ts", "scripts/**/*.ts"]
+  "include": [
+    "src/main/**/*.ts",
+    "src/preload/**/*.ts",
+    "src/shared/**/*.ts",
+    "scripts/**/*.ts"
+  ]
 }

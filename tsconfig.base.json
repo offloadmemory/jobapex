@@ -5,6 +5,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@shared/*": [
+        "./src/shared/*"
+      ]
+    }
   }
 }
