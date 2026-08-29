@@ -21,6 +21,19 @@ export interface TranscriptEntry {
 
 export type Status = "idle" | "streaming" | "approval";
 
+/**
+ * Human-friendly one-liner for a terminal run error, shown inline in the
+ * transcript. Connection failures to the model daemon get an actionable hint;
+ * anything else surfaces the raw error string as-is (it already arrives as
+ * `name: message` from the main process).
+ */
+export function friendlyError(raw: string): string {
+  if (/ECONNREFUSED|Connection refused|fetch failed|ENOTFOUND|ECONNRESET/i.test(raw)) {
+    return `Can't reach the model server — is Ollama running? (${raw})`;
+  }
+  return raw;
+}
+
 export interface ApprovalState {
   runId: string;
   request: HITLRequestWire;
@@ -106,13 +119,30 @@ export class ChatStore {
         // to guarantee subscribers see the new request.
         this.emit();
         break;
-      case "done":
+      case "done": {
         // A terminal done for a run that was already torn down (e.g. the
         // cancelled orphan run's done landing after "New thread" reset the
         // store) arrives while idle with nothing buffered. Treat it as a
         // no-op so a stale run can never mutate a fresh thread.
         if (this.status === "idle" && !this.live && !this.approval) return;
         this.flushLive();
+        // Surface the terminal outcome inline:
+        //  - an error entry whenever the run failed (runtime's result.error);
+        //    note a genuine user cancel from runtime arrives as
+        //    cancelled:true with NO error, so an error+cancelled combination
+        //    can only be chat.ts's unexpected-failure catch, which must not
+        //    be masked as a clean "task cancelled".
+        //  - a plain "task cancelled" note for a user-initiated cancel.
+        //  - a subtle memory note for a successful post-turn consolidation.
+        if (ev.error) {
+          this.addEntry("error", friendlyError(ev.error));
+        } else if (ev.cancelled) {
+          this.addEntry("system", "task cancelled");
+        }
+        const remembered = ev.rememberedNotes ?? 0;
+        if (remembered > 0) {
+          this.addEntry("system", `remembered ${remembered} note${remembered === 1 ? "" : "s"}`);
+        }
         this.setStatus("idle");
         // A terminal done while the approval card is up (e.g. the run failed
         // and chat.ts emitted done with the interrupt promise still pending)
@@ -121,6 +151,7 @@ export class ChatStore {
         // setStatus("streaming") would strand the UI forever.
         this.approval = null;
         break;
+      }
     }
   }
 

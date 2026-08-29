@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ChatStore } from "./chat-store";
+import { ChatStore, friendlyError } from "./chat-store";
 import type { WireEvent } from "@shared/wire";
 
 function storeWith(events: WireEvent[]): ChatStore {
@@ -150,5 +150,74 @@ describe("ChatStore", () => {
     expect(s.live?.depth).toBe(1);
     expect(s.entries).toHaveLength(1);
     expect(s.entries[0]).toMatchObject({ kind: "assistant", text: "main" });
+  });
+
+  describe("done outcome entries", () => {
+    // A done consumed from a fresh store hits the stale-done guard (idle,
+    // nothing buffered), so seed a token to make the store "in a run".
+    const inRun = (events: WireEvent[]): ChatStore =>
+      storeWith([
+        { type: "token", depth: 0, msg: { type: "ai", content: "hi", reasoning: "" } },
+        ...events,
+      ]);
+
+    it("adds an error entry with the friendly message on a failed run", () => {
+      const s = inRun([
+        {
+          type: "done",
+          cancelled: false,
+          error: "Error: connect ECONNREFUSED 127.0.0.1:11434",
+        },
+      ]);
+      expect(s.status).toBe("idle");
+      const err = s.entries.find((e) => e.kind === "error");
+      expect(err).toBeDefined();
+      expect(err?.text).toContain("is Ollama running?");
+      expect(err?.text).toContain("connect ECONNREFUSED 127.0.0.1:11434");
+    });
+
+    it("maps a connection-refused error to the Ollama hint (friendlyError)", () => {
+      expect(friendlyError("Error: connect ECONNREFUSED 127.0.0.1:11434")).toBe(
+        "Can't reach the model server — is Ollama running? (Error: connect ECONNREFUSED 127.0.0.1:11434)"
+      );
+    });
+
+    it("leaves a generic error string unchanged (friendlyError)", () => {
+      expect(friendlyError("Error: model exploded on turn 2")).toBe(
+        "Error: model exploded on turn 2"
+      );
+    });
+
+    it("adds a system entry on a user-cancelled run (and sets idle)", () => {
+      const s = inRun([{ type: "done", cancelled: true }]);
+      expect(s.status).toBe("idle");
+      expect(s.entries.at(-1)).toMatchObject({ kind: "system", text: "task cancelled" });
+    });
+
+    it("prefers the error entry when a done carries both error and cancelled", () => {
+      // chat.ts's unexpected-failure catch emits done with cancelled:true AND
+      // an error string; that is an abort mid-run, not a clean user cancel, so
+      // it must surface as an error (a real user cancel carries no error).
+      const s = inRun([{ type: "done", cancelled: true, error: "Error: boom" }]);
+      expect(s.entries.at(-1)).toMatchObject({ kind: "error" });
+    });
+
+    it("adds a remembered-notes system entry after a successful run", () => {
+      const s = inRun([{ type: "done", cancelled: false, rememberedNotes: 2 }]);
+      expect(s.status).toBe("idle");
+      expect(s.entries.at(-1)).toMatchObject({ kind: "system", text: "remembered 2 notes" });
+    });
+
+    it("does not add a memory note when no notes were remembered", () => {
+      const s = inRun([
+        { type: "done", cancelled: false, rememberedNotes: 0 },
+      ]);
+      expect(s.entries.some((e) => e.text.includes("remembered"))).toBe(false);
+      // And a fully clean done (success, nothing remembered, no cancel/error)
+      // still tears the run down.
+      const s2 = inRun([{ type: "done", cancelled: false }]);
+      expect(s2.status).toBe("idle");
+      expect(s2.approval).toBeNull();
+    });
   });
 });
