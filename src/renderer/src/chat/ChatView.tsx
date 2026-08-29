@@ -46,8 +46,16 @@ export function ChatView() {
           <button
             className="rounded-md px-2 py-1 hover:bg-muted"
             onClick={() => {
-              setThreadId(crypto.randomUUID());
+              // Kill the orphan run BEFORE resetting: onEvent has a single
+              // global channel and no thread identity, so a still-streaming
+              // run would repopulate the fresh store. Then reset, then mint a
+              // new threadId. The cancelled run's terminal done event is a
+              // no-op on the idle store (see ChatStore.consume).
+              void hermes.chat.cancel(threadId).then((r) => {
+                if (!r.ok) console.warn("[chat] cancel failed:", r.error.code, r.error.message);
+              });
               store.reset();
+              setThreadId(crypto.randomUUID());
             }}
           >
             New thread

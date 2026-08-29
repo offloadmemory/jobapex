@@ -107,6 +107,11 @@ export class ChatStore {
         this.emit();
         break;
       case "done":
+        // A terminal done for a run that was already torn down (e.g. the
+        // cancelled orphan run's done landing after "New thread" reset the
+        // store) arrives while idle with nothing buffered. Treat it as a
+        // no-op so a stale run can never mutate a fresh thread.
+        if (this.status === "idle" && !this.live && !this.approval) return;
         this.flushLive();
         this.setStatus("idle");
         break;

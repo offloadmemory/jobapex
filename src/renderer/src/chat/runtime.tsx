@@ -67,7 +67,9 @@ export function ChatRuntimeProvider({
       });
     },
     onCancel: async () => {
-      void hermes.chat.cancel(threadId);
+      void hermes.chat.cancel(threadId).then((r) => {
+        if (!r.ok) console.warn("[chat] cancel failed:", r.error.code, r.error.message);
+      });
     },
     convertMessage: toThreadMessage,
   });

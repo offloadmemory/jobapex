@@ -106,6 +106,17 @@ describe("ChatStore", () => {
     unsubscribe();
   });
 
+  it("ignores a stale done event when already idle with nothing pending", () => {
+    const s = new ChatStore();
+    const before = s.getSnapshot();
+
+    s.consume({ type: "done", cancelled: true });
+
+    expect(s.getSnapshot()).toBe(before);
+    expect(s.status).toBe("idle");
+    expect(s.entries).toEqual([]);
+  });
+
   it("flushes the previous depth live when a token arrives at a new depth", () => {
     const s = storeWith([
       { type: "token", depth: 0, msg: { type: "ai", content: "main", reasoning: "" } },
