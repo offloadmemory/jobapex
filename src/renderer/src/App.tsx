@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChatView } from "./chat/ChatView";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 const NAV: ReadonlyArray<{ id: string; label: string; disabled?: boolean }> = [
   { id: "chat", label: "Chat" },
@@ -28,7 +29,9 @@ export function App() {
           </button>
         ))}
       </aside>
-      <main className="flex-1 min-w-0">{active === "chat" ? <ChatView /> : null}</main>
+      <main className="flex-1 min-w-0">
+        <TooltipProvider delayDuration={200}>{active === "chat" ? <ChatView /> : null}</TooltipProvider>
+      </main>
     </div>
   );
 }

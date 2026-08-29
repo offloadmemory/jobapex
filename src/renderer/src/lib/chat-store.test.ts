@@ -74,6 +74,38 @@ describe("ChatStore", () => {
     expect(s.getSnapshot()).toBeGreaterThan(before);
   });
 
+  it("reset clears all state back to an idle blank thread", () => {
+    const s = storeWith([
+      { type: "token", depth: 0, msg: { type: "ai", content: "hi", reasoning: "think" } },
+      { type: "todos", todos: [{ content: "x", status: "pending" }] },
+      { type: "approval", runId: "r1", request: { actionRequests: [] } },
+    ]);
+    s.addEntry("user", "hello");
+
+    s.reset();
+
+    expect(s.entries).toEqual([]);
+    expect(s.todos).toEqual([]);
+    expect(s.live).toBeNull();
+    expect(s.approval).toBeNull();
+    expect(s.status).toBe("idle");
+  });
+
+  it("reset bumps the snapshot and notifies subscribers", () => {
+    const s = storeWith([{ type: "token", depth: 0, msg: { type: "ai", content: "hi", reasoning: "" } }]);
+    const before = s.getSnapshot();
+    let calls = 0;
+    const unsubscribe = s.subscribe(() => {
+      calls += 1;
+    });
+
+    s.reset();
+
+    expect(s.getSnapshot()).toBeGreaterThan(before);
+    expect(calls).toBe(1);
+    unsubscribe();
+  });
+
   it("flushes the previous depth live when a token arrives at a new depth", () => {
     const s = storeWith([
       { type: "token", depth: 0, msg: { type: "ai", content: "main", reasoning: "" } },

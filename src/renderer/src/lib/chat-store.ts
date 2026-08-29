@@ -74,6 +74,16 @@ export class ChatStore {
     this.emit();
   }
 
+  /** Wipe everything and return to a blank idle thread ("New thread"). */
+  reset(): void {
+    this.entries = [];
+    this.todos = [];
+    this.live = null;
+    this.approval = null;
+    this.status = "idle";
+    this.emit();
+  }
+
   consume(ev: WireEvent): void {
     switch (ev.type) {
       case "token":

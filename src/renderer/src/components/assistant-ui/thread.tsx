@@ -24,24 +24,28 @@ import { cn } from "@/lib/utils";
  */
 
 const ErrorMessage: FC = () => (
-  <div className="col-span-full rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+  <div className="mt-1 w-full rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
     <MessagePrimitive.Error />
   </div>
 );
 
 const UserMessage: FC = () => (
-  <MessagePrimitive.Root className="flex w-full justify-end py-2">
-    <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-2 text-sm leading-relaxed text-primary-foreground">
-      <MessagePrimitive.Parts />
+  <MessagePrimitive.Root className="flex w-full flex-col py-2">
+    <div className="flex w-full justify-end">
+      <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-2 text-sm leading-relaxed text-primary-foreground">
+        <MessagePrimitive.Parts />
+      </div>
     </div>
     <ErrorMessage />
   </MessagePrimitive.Root>
 );
 
 const AssistantMessage: FC = () => (
-  <MessagePrimitive.Root className="flex w-full justify-start py-2">
-    <div className="max-w-[80%] text-sm leading-relaxed text-foreground">
-      <MessagePrimitive.Parts />
+  <MessagePrimitive.Root className="flex w-full flex-col py-2">
+    <div className="flex w-full justify-start">
+      <div className="max-w-[80%] text-sm leading-relaxed text-foreground">
+        <MessagePrimitive.Parts />
+      </div>
     </div>
     <ErrorMessage />
   </MessagePrimitive.Root>
