@@ -1,0 +1,72 @@
+{
+  "name": "jobapex",
+  "version": "1.0.0",
+  "description": "JobApex — your job search at its peak. A specialized AI job-search assistant that tracks every application, auto-applies, and handles outreach. Built on the CodeApex agent foundation: LangChain Deep Agents in pure TypeScript with durable threads, auto-memory, and skills. Runs on local Ollama.",
+  "main": "index.js",
+  "bin": {
+    "hermes": "bin/hermes.js"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "tsc --noEmit",
+    "start": "tsx src/index.tsx",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx scripts/smoke.ts",
+    "wiki:update": "scripts/wiki.sh --update",
+    "wiki:init": "scripts/wiki.sh --init"
+  },
+  "keywords": [
+    "jobapex",
+    "job-search",
+    "job-tracker",
+    "career",
+    "outreach",
+    "code-apex",
+    "claude-code",
+    "coding-agent",
+    "terminal",
+    "tui",
+    "langchain",
+    "deepagents",
+    "deep-agents",
+    "agents",
+    "llm",
+    "ollama",
+    "typescript",
+    "human-in-the-loop",
+    "openwiki",
+    "subagents"
+  ],
+  "author": "Kartik Manimuthu <kartikmanimuthu@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@langchain/core": "^1.2.5",
+    "@langchain/langgraph": "^1.4.9",
+    "@langchain/langgraph-checkpoint-sqlite": "^1.0.3",
+    "@langchain/ollama": "^1.3.0",
+    "deepagents": "^1.12.2",
+    "duck-duck-scrape": "^2.2.7",
+    "ink": "^7.1.1",
+    "langchain": "^1.5.5",
+    "react": "^19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "ink-testing-library": "^4.0.0",
+    "openwiki": "^0.3.1",
+    "tsx": "^4.23.11",
+    "typescript": "^7.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kartikmanimuthu/jobapex.git"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
