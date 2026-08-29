@@ -117,6 +117,30 @@ describe("ChatStore", () => {
     expect(s.entries).toEqual([]);
   });
 
+  it("clears a pending approval when a terminal done arrives while the gate is open", () => {
+    // Realistic race: runAgentTask rejects while the interrupt promise is
+    // pending, chat.ts's catch emits done, and the runtime tears down the
+    // pending approval. The store must drop the dead card — otherwise the user
+    // answers a dialog for a run that no longer exists and resolve()'s
+    // setStatus("streaming") would strand the UI at "streaming" forever.
+    const s = storeWith([
+      { type: "done", cancelled: false },
+      {
+        type: "approval",
+        runId: "r1",
+        request: { actionRequests: [{ name: "execute", args: { command: "ls" } }] },
+      },
+      { type: "done", cancelled: false },
+    ]);
+    expect(s.status).toBe("idle");
+    expect(s.approval).toBeNull();
+    // And a subsequent flow cannot resurrect the dead card's state: the
+    // approval slot is genuinely empty, so a fresh gate is required to render.
+    s.setStatus("streaming");
+    expect(s.status).toBe("streaming");
+    expect(s.approval).toBeNull();
+  });
+
   it("flushes the previous depth live when a token arrives at a new depth", () => {
     const s = storeWith([
       { type: "token", depth: 0, msg: { type: "ai", content: "main", reasoning: "" } },

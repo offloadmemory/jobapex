@@ -114,6 +114,12 @@ export class ChatStore {
         if (this.status === "idle" && !this.live && !this.approval) return;
         this.flushLive();
         this.setStatus("idle");
+        // A terminal done while the approval card is up (e.g. the run failed
+        // and chat.ts emitted done with the interrupt promise still pending)
+        // tears down the run: drop the dead card too, or the user would answer
+        // a dialog for a run that no longer exists and resolve()'s
+        // setStatus("streaming") would strand the UI forever.
+        this.approval = null;
         break;
     }
   }
