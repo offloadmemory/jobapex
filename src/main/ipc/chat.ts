@@ -5,7 +5,11 @@ import { runTask, resolveApproval, cancel, isRunning } from "../agent/runtime.js
 
 function sendToAll(ev: WireEvent): void {
   for (const win of BrowserWindow.getAllWindows()) {
-    win.webContents.send("chat:event", ev);
+    // A window closed mid-run is still listed until its "closed" flush; sending
+    // to a destroyed webContents throws and would kill the run's event loop.
+    if (!win.isDestroyed()) {
+      win.webContents.send("chat:event", ev);
+    }
   }
 }
 
@@ -22,7 +26,14 @@ export function registerChatIpc(): void {
       };
     }
     const { prompt, threadId } = parsed.data;
-    void runTask(prompt, threadId, sendToAll).catch(() => {});
+    void runTask(prompt, threadId, sendToAll).catch((err: unknown) => {
+      // runTask normally emits its own terminal "done"; reaching this catch
+      // means it failed before/unexpectedly, so emit one here or the UI
+      // stays "running" forever.
+      const e = err as { name?: string; message?: string } | undefined;
+      const errString = `${e?.name ?? "Error"}: ${e?.message ?? String(err)}`;
+      sendToAll({ type: "done", cancelled: true, error: errString });
+    });
     return { ok: true, data: { runId: threadId } };
   });
 
