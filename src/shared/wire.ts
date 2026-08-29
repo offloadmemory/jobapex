@@ -53,3 +53,22 @@ export interface AppInfo {
   memfs: boolean;
   yolo: boolean;
 }
+
+/**
+ * The API the preload bridge exposes on `window.hermes`.
+ *
+ * Declared here (in shared code) rather than in `src/preload/` so the renderer
+ * can type against it without importing anything that pulls in Electron's
+ * typings — `tsconfig.web.json` must stay free of Node types.
+ */
+export interface HermesApi {
+  chat: {
+    run(req: { prompt: string; threadId: string }): Promise<Result<{ runId: string }>>;
+    cancel(threadId: string): Promise<Result<null>>;
+    resolveApproval(runId: string, decision: HITLResponseWire): Promise<Result<null>>;
+  };
+  app: {
+    getInfo(): Promise<Result<AppInfo>>;
+  };
+  onEvent(cb: (ev: WireEvent) => void): () => void;
+}

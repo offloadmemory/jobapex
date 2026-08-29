@@ -19,7 +19,10 @@ const cfg = loadConfig();
 const agent = buildAgent(cfg);
 const model = new ChatOllama({ model: cfg.model, baseUrl: cfg.baseUrl, think: false });
 
-const pendingApprovals = new Map<string, (r: HITLResponse) => void>();
+const pendingApprovals = new Map<
+  string,
+  { request: HITLRequest; resolve: (r: HITLResponse) => void }
+>();
 let active: { runId: string; threadId: string; controller: AbortController } | null = null;
 
 function toWireMsg(msg: Record<string, any>): WireMsg | null {
@@ -102,7 +105,7 @@ export async function runTask(
     },
     requestApproval: (request) =>
       new Promise<HITLResponse>((resolve) => {
-        pendingApprovals.set(runId, resolve);
+        pendingApprovals.set(runId, { request, resolve });
         send({ type: "approval", runId, request: toWireRequest(request) });
       }),
     onDrain: () => send({ type: "drain" }),
@@ -111,7 +114,11 @@ export async function runTask(
   try {
     const result = await runAgentTask(agent, prompt, threadId, callbacks, controller.signal);
     if (result.error) {
-      send({ type: "done", cancelled: false, error: result.error.message });
+      send({
+        type: "done",
+        cancelled: false,
+        error: result.error.message || result.error.name,
+      });
     } else if (result.cancelled) {
       send({ type: "done", cancelled: true });
     } else {
@@ -128,25 +135,32 @@ export async function runTask(
 }
 
 export function resolveApproval(runId: string, decision: HITLResponseWire): void {
-  const resolve = pendingApprovals.get(runId);
-  if (!resolve) return;
+  const entry = pendingApprovals.get(runId);
+  if (!entry) return;
   pendingApprovals.delete(runId);
-  resolve(toHITLResponse(decision));
+  entry.resolve(toHITLResponse(decision));
 }
 
 export function cancel(): void {
   if (!active) return;
   const { runId, controller } = active;
-  const resolve = pendingApprovals.get(runId);
-  if (resolve) {
+  const entry = pendingApprovals.get(runId);
+  if (entry) {
     pendingApprovals.delete(runId);
-    resolve({
-      decisions: (pendingApprovals.size >= 0 ? [] : []).length
-        ? []
-        : [],
+    // Reject all pending actions so the langgraph interrupt resolves and the
+    // run unwinds via the abort below instead of hanging forever.
+    entry.resolve({
+      decisions: entry.request.actionRequests.map(() => ({
+        type: "reject",
+        message: "The user cancelled this task.",
+      })),
     });
   }
   controller.abort();
+}
+
+export function isRunning(): boolean {
+  return active !== null;
 }
 
 export function getAppInfo(): AppInfo {
