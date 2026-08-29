@@ -55,4 +55,33 @@ describe("ChatStore", () => {
     const s = storeWith([{ type: "todos", todos: [{ content: "x", status: "pending" }] }]);
     expect(s.todos).toEqual([{ content: "x", status: "pending" }]);
   });
+
+  it("emits a visible snapshot for a second approval after clearApproval", () => {
+    const s = new ChatStore();
+    s.consume({
+      type: "approval",
+      runId: "r1",
+      request: { actionRequests: [{ name: "execute", args: { command: "ls" } }] },
+    });
+    s.clearApproval();
+    const before = s.getSnapshot();
+    s.consume({
+      type: "approval",
+      runId: "r2",
+      request: { actionRequests: [{ name: "execute", args: { command: "pwd" } }] },
+    });
+    expect(s.approval?.runId).toBe("r2");
+    expect(s.getSnapshot()).toBeGreaterThan(before);
+  });
+
+  it("flushes the previous depth live when a token arrives at a new depth", () => {
+    const s = storeWith([
+      { type: "token", depth: 0, msg: { type: "ai", content: "main", reasoning: "" } },
+      { type: "token", depth: 1, msg: { type: "ai", content: "sub", reasoning: "" } },
+    ]);
+    expect(s.live?.text).toBe("sub");
+    expect(s.live?.depth).toBe(1);
+    expect(s.entries).toHaveLength(1);
+    expect(s.entries[0]).toMatchObject({ kind: "assistant", text: "main" });
+  });
 });

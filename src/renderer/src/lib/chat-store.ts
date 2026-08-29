@@ -91,6 +91,10 @@ export class ChatStore {
       case "approval":
         this.approval = { runId: ev.runId, request: ev.request };
         this.setStatus("approval");
+        // setStatus early-returns when status is already "approval" (e.g. after
+        // clearApproval(), which does not reset status), so emit unconditionally
+        // to guarantee subscribers see the new request.
+        this.emit();
         break;
       case "done":
         this.flushLive();
