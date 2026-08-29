@@ -63,7 +63,14 @@ export function ChatRuntimeProvider({
       store.addEntry("user", text);
       store.setStatus("streaming");
       void hermes.chat.run({ prompt: text, threadId }).then((r) => {
-        if (!r.ok) console.warn("[chat] run failed:", r.error.code, r.error.message);
+        if (!r.ok) {
+          console.warn("[chat] run failed:", r.error.code, r.error.message);
+          // A rejected envelope (BUSY, BAD_REQUEST, ...) means the main process
+          // never started a run, so no terminal done event will arrive —
+          // unwind here or the transcript strands at "streaming".
+          store.setStatus("idle");
+          store.addEntry("error", r.error.message);
+        }
       });
     },
     onCancel: async () => {
