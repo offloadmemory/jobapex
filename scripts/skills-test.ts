@@ -2,10 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { Command } from "@langchain/langgraph";
 import type { HITLRequest } from "langchain";
-import { loadConfig } from "../src/config.js";
-import { buildAgent } from "../src/agent.js";
-import { skillsDir } from "../src/paths.js";
-import { loadSkill, writeSkill } from "../src/skills/tools.js";
+import { loadConfig } from "../src/main/agent/config.js";
+import { buildAgent } from "../src/main/agent/agent.js";
+import { skillsDir } from "../src/main/agent/paths.js";
+import { loadSkill, writeSkill } from "../src/main/agent/skills/tools.js";
 import { parseSkillMetadata } from "deepagents";
 
 // Seed a skill so list/load has something to find.

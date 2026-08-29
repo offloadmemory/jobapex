@@ -5,10 +5,10 @@
  */
 import { randomUUID } from "node:crypto";
 import type { HITLRequest, HITLResponse } from "langchain";
-import { loadConfig } from "../src/config.js";
-import { buildAgent } from "../src/agent.js";
-import { runAgentTask, type TaskCallbacks, type TaskResult } from "../src/agent-runner.js";
-import { truncate } from "../src/stream-events.js";
+import { loadConfig } from "../src/main/agent/config.js";
+import { buildAgent } from "../src/main/agent/agent.js";
+import { runAgentTask, type TaskCallbacks, type TaskResult } from "../src/main/agent/agent-runner.js";
+import { truncate } from "../src/main/agent/stream-events.js";
 
 const agent = buildAgent(loadConfig([])); // gate ON
 let approvals = 0;
