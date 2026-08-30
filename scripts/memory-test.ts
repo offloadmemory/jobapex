@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loadConfig } from "../src/config.js";
-import { buildAgent } from "../src/agent.js";
-import { consolidateMemory } from "../src/memory/consolidate.js";
-import { listNotes, readNote, slugify } from "../src/memory/store.js";
-import { readMemory, writeMemory } from "../src/memory/tools.js";
-import { memoryDir } from "../src/paths.js";
+import { loadConfig } from "../src/main/agent/config.js";
+import { buildAgent } from "../src/main/agent/agent.js";
+import { consolidateMemory } from "../src/main/agent/memory/consolidate.js";
+import { listNotes, readNote, slugify } from "../src/main/agent/memory/store.js";
+import { readMemory, writeMemory } from "../src/main/agent/memory/tools.js";
+import { memoryDir } from "../src/main/agent/paths.js";
 import { ChatOllama } from "@langchain/ollama";
 
 const cfg = loadConfig(["--yolo"]);

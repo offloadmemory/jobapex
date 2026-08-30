@@ -3,9 +3,9 @@
  * chunks carry reasoning_content and content deltas, and that the renderer
  * interleaves 🧠 thinking, prose, and tool lines without collisions.
  */
-import { loadConfig } from "../src/config.js";
-import { buildAgent } from "../src/agent.js";
-import { StreamRenderer } from "../src/render.js";
+import { loadConfig } from "../src/main/agent/config.js";
+import { buildAgent } from "../src/main/agent/agent.js";
+import { StreamRenderer } from "../src/main/agent/render.js";
 
 const agent = buildAgent(loadConfig(["--yolo"]));
 const renderer = new StreamRenderer(true);

@@ -4,9 +4,9 @@
  */
 import { Command } from "@langchain/langgraph";
 import type { HITLRequest } from "langchain";
-import { loadConfig } from "../src/config.js";
-import { buildAgent } from "../src/agent.js";
-import { StreamRenderer } from "../src/render.js";
+import { loadConfig } from "../src/main/agent/config.js";
+import { buildAgent } from "../src/main/agent/agent.js";
+import { StreamRenderer } from "../src/main/agent/render.js";
 
 const agent = buildAgent(loadConfig([])); // gate ON
 const renderer = new StreamRenderer();

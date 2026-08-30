@@ -1,8 +1,8 @@
 import fs from "node:fs";
-import { loadConfig } from "../src/config.js";
-import { buildAgent } from "../src/agent.js";
-import { createCheckpointer } from "../src/persistence.js";
-import { checkpointsPath } from "../src/paths.js";
+import { loadConfig } from "../src/main/agent/config.js";
+import { buildAgent } from "../src/main/agent/agent.js";
+import { createCheckpointer } from "../src/main/agent/persistence.js";
+import { checkpointsPath } from "../src/main/agent/paths.js";
 
 const cfg = loadConfig(["--yolo"]);
 const threadId = "persistence-test";

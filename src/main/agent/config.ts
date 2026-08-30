@@ -4,7 +4,12 @@ import { fileURLToPath } from "node:url";
 
 import { configPath } from "./paths.js";
 
-const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const projectRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+);
 
 export interface AppConfig {
   /** Ollama model name, e.g. "glm-5.2:cloud" */
