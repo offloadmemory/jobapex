@@ -19,11 +19,27 @@ describe("toThreadMessage", () => {
     });
   });
 
-  it("maps a tool entry to a prefixed text part", () => {
-    const e: TranscriptEntry = { id: 3, kind: "tool", text: "write_file {}", depth: 0 };
+  it("maps a tool entry to a typed toolCall data part", () => {
+    const e: TranscriptEntry = { id: 3, kind: "tool", text: 'write_file {"path":"a.txt"}', depth: 0 };
     expect(toThreadMessage(e)).toEqual({
       role: "assistant",
-      content: [{ type: "text", text: "🔧 write_file {}" }],
+      content: [{ type: "data", name: "toolCall", data: { name: "write_file", args: { path: "a.txt" } } }],
+    });
+  });
+
+  it("maps an error entry to a typed error data part", () => {
+    const e: TranscriptEntry = { id: 4, kind: "error", text: "boom", depth: 0 };
+    expect(toThreadMessage(e)).toEqual({
+      role: "assistant",
+      content: [{ type: "data", name: "error", data: { text: "boom" } }],
+    });
+  });
+
+  it("keeps an empty assistant entry renderable during streaming", () => {
+    const e: TranscriptEntry = { id: 5, kind: "assistant", text: "", depth: 0 };
+    expect(toThreadMessage(e)).toEqual({
+      role: "assistant",
+      content: [{ type: "text", text: "" }],
     });
   });
 });

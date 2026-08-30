@@ -22,6 +22,26 @@ function textOf(message: ThreadMessageLike): string {
 }
 
 /**
+ * Shared run invocation for the composer and the empty-state suggestion chips.
+ * A rejected envelope (BUSY, BAD_REQUEST, …) means the main process never
+ * started a run, so no terminal done event will arrive — unwind here or the
+ * transcript strands at "streaming".
+ */
+export function sendPrompt(store: ChatStore, threadId: string, text: string): void {
+  const prompt = text.trim();
+  if (!prompt) return;
+  store.addEntry("user", prompt);
+  store.setStatus("streaming");
+  void hermes.chat.run({ prompt, threadId }).then((r) => {
+    if (!r.ok) {
+      console.warn("[chat] run failed:", r.error.code, r.error.message);
+      store.setStatus("idle");
+      store.addEntry("error", r.error.message);
+    }
+  });
+}
+
+/**
  * Subscribe to the store's version-integer snapshot before reading its fields,
  * so every emitted change re-renders with fresh field values.
  */
@@ -58,20 +78,7 @@ export function ChatRuntimeProvider({
     messages,
     isRunning: status === "streaming",
     onNew: async (message) => {
-      const text = textOf(message).trim();
-      if (!text) return;
-      store.addEntry("user", text);
-      store.setStatus("streaming");
-      void hermes.chat.run({ prompt: text, threadId }).then((r) => {
-        if (!r.ok) {
-          console.warn("[chat] run failed:", r.error.code, r.error.message);
-          // A rejected envelope (BUSY, BAD_REQUEST, ...) means the main process
-          // never started a run, so no terminal done event will arrive —
-          // unwind here or the transcript strands at "streaming".
-          store.setStatus("idle");
-          store.addEntry("error", r.error.message);
-        }
-      });
+      sendPrompt(store, threadId, textOf(message));
     },
     onCancel: async () => {
       void hermes.chat.cancel(threadId).then((r) => {
