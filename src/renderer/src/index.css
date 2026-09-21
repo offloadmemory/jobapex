@@ -49,6 +49,74 @@
     --ring: 240 4.9% 83.9%;
     --sidebar: 240 5.9% 10%;
     --sidebar-foreground: 0 0% 98%;
+    --radius: 0.5rem;
+  }
+
+  /*
+   * Accent palettes, layered on top of the mode above: `data-accent` on <html>
+   * (see theme.ts) repaints `--primary`, so buttons, the active nav row, the
+   * logo tile and `--ring` focus rings take the hue. The bare selector is the
+   * light-mode palette, the `.dark` one the dark-mode palette; "neutral" has no
+   * block and falls through to the monochrome tokens.
+   *
+   * `--primary-foreground` contrasts with `--primary` at 4.9:1 or better in both
+   * modes, and `--primary` itself stays above 4.9:1 on its own background, so
+   * accent text (`variant="link"`) and accent fills both stay legible.
+   */
+  /* blue — 8.0:1 on white, 4.9:1 on dark */
+  :root[data-accent="blue"] {
+    --primary: 224 76% 42%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 224 76% 42%;
+  }
+  :root.dark[data-accent="blue"] {
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --ring: 217 91% 60%;
+  }
+  /* violet — 8.3:1 / 5.3:1 */
+  :root[data-accent="violet"] {
+    --primary: 263 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 263 70% 45%;
+  }
+  :root.dark[data-accent="violet"] {
+    --primary: 258 90% 70%;
+    --primary-foreground: 260 50% 10%;
+    --ring: 258 90% 70%;
+  }
+  /* emerald — 4.9:1 / 7.9:1 */
+  :root[data-accent="emerald"] {
+    --primary: 161 94% 26%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 161 94% 26%;
+  }
+  :root.dark[data-accent="emerald"] {
+    --primary: 158 64% 52%;
+    --primary-foreground: 165 91% 9%;
+    --ring: 158 64% 52%;
+  }
+  /* amber — 5.0:1 / 8.7:1 */
+  :root[data-accent="amber"] {
+    --primary: 26 90% 37%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 26 90% 37%;
+  }
+  :root.dark[data-accent="amber"] {
+    --primary: 43 96% 56%;
+    --primary-foreground: 26 83% 14%;
+    --ring: 43 96% 56%;
+  }
+  /* rose — 6.5:1 / 6.4:1 */
+  :root[data-accent="rose"] {
+    --primary: 347 77% 41%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 347 77% 41%;
+  }
+  :root.dark[data-accent="rose"] {
+    --primary: 351 95% 71%;
+    --primary-foreground: 345 80% 12%;
+    --ring: 351 95% 71%;
   }
 }
 
@@ -73,12 +141,13 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-zinc-300/70;
+    /* Token-driven, not zinc: a hardcoded light gray is a bright bar on a dark window. */
+    @apply rounded-full bg-foreground/20;
     background-clip: padding-box;
     border: 2px solid transparent;
   }
   *::-webkit-scrollbar-thumb:hover {
-    @apply bg-zinc-400/80;
+    @apply bg-foreground/30;
   }
   *::-webkit-scrollbar-corner {
     background: transparent;

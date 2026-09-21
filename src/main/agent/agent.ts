@@ -1,13 +1,13 @@
 import fs from "node:fs";
 import { todoListMiddleware } from "langchain";
-import { ChatOllama } from "@langchain/ollama";
 import { createDeepAgent, LocalShellBackend } from "deepagents";
-import type { AppConfig } from "./config.js";
+import { ensureWorkspaceSeed, type AppConfig } from "./config.js";
 import { webSearch } from "./tools/search.js";
 import { subagents } from "./subagents.js";
 import { ollamaToolContentShim } from "./ollamaShim.js";
 import { createIdentityMiddleware } from "./identity.js";
 import { createSkillsRegistry } from "./skills/registry.js";
+import { activeModelSpec, createChatModel } from "./model-factory.js";
 import { writeSkill, loadSkill } from "./skills/tools.js";
 import { readMemory, writeMemory } from "./memory/tools.js";
 import { createCheckpointer } from "./persistence.js";
@@ -53,15 +53,14 @@ const interruptOnShell = {
 export function buildAgent(cfg: AppConfig) {
   if (!cfg.memfs) {
     fs.mkdirSync(cfg.workspaceDir, { recursive: true });
+    // A first run against a brand-new root would otherwise start with no
+    // AGENTS.md at all — the identity middleware silently skips a missing file.
+    ensureWorkspaceSeed(cfg.workspaceDir);
   }
 
-  const model = new ChatOllama({
-    model: cfg.model,
-    baseUrl: cfg.baseUrl,
-    // Surfaces the model's reasoning as separate thinking tokens
-    // (additional_kwargs.reasoning_content on streamed chunks).
-    think: cfg.think,
-  });
+  // Default provider row → config/env → Ollama defaults (see model-factory).
+  const spec = activeModelSpec(cfg);
+  const model = createChatModel(spec);
 
   const backend = cfg.memfs
     ? undefined // deepagents defaults to StateBackend (in-memory virtual FS)
@@ -84,7 +83,13 @@ export function buildAgent(cfg: AppConfig) {
     tools: [webSearch, writeSkill, loadSkill, readMemory, writeMemory],
     subagents: gatedSubagents,
     ...(backend ? { backend } : {}),
-    middleware: [todoListMiddleware(), createIdentityMiddleware(cfg.workspaceDir), createSkillsRegistry(), ollamaToolContentShim],
+    middleware: [
+      todoListMiddleware(),
+      createIdentityMiddleware(cfg.workspaceDir),
+      createSkillsRegistry(),
+      // Flattens block content that Ollama's chat API rejects; other providers accept it.
+      ...(spec.type === "ollama" ? [ollamaToolContentShim] : []),
+    ],
     checkpointer: createCheckpointer(),
     ...(gate ? { interruptOn: gate } : {}),
   });

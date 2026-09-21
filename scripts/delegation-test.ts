@@ -1,7 +1,11 @@
 /** One-off live test: exercises task-tool delegation to coder + critic. */
+import { requireIsolatedHome } from "./lib/isolated-home.js";
 import { loadConfig } from "../src/main/agent/config.js";
 import { buildAgent } from "../src/main/agent/agent.js";
 import { StreamRenderer } from "../src/main/agent/render.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
 
 const agent = buildAgent(loadConfig(["--yolo"]));
 const renderer = new StreamRenderer();

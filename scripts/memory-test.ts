@@ -8,6 +8,11 @@ import { readMemory, writeMemory } from "../src/main/agent/memory/tools.js";
 import { memoryDir } from "../src/main/agent/paths.js";
 import { ChatOllama } from "@langchain/ollama";
 
+import { requireIsolatedHome } from "./lib/isolated-home.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
+
 const cfg = loadConfig(["--yolo"]);
 const model = new ChatOllama({ model: cfg.model, baseUrl: cfg.baseUrl, think: false });
 

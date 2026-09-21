@@ -30,3 +30,25 @@ export function checkpointsPath(): string {
 export function configPath(): string {
   return path.join(agentHomeDir(), "config.json");
 }
+
+/** Rotating file log for main-process failures (see `src/main/app/logger.ts`). */
+export function logsDir(): string {
+  const dir = path.join(agentHomeDir(), "logs");
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/** App-owned structured state: threads index, providers, settings, PIN hash. */
+export function appDbPath(): string {
+  return path.join(agentHomeDir(), "app.sqlite");
+}
+
+/** API keys encrypted with Electron safeStorage (never plaintext). */
+export function secretsPath(): string {
+  return path.join(agentHomeDir(), "secrets.bin");
+}
+
+/** User identity file loaded into every session (setup wizard writes it). */
+export function agentMdPath(): string {
+  return path.join(agentHomeDir(), "agent.md");
+}

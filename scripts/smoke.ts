@@ -4,9 +4,13 @@
  *
  * Run: npm run smoke
  */
+import { requireIsolatedHome } from "./lib/isolated-home.js";
 import { loadConfig } from "../src/main/agent/config.js";
 import { buildAgent } from "../src/main/agent/agent.js";
 import { StreamRenderer } from "../src/main/agent/render.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
 
 const cfg = loadConfig(["--yolo"]);
 const agent = buildAgent(cfg);

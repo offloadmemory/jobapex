@@ -1,8 +1,13 @@
 import fs from "node:fs";
+
+import { requireIsolatedHome } from "./lib/isolated-home.js";
 import { loadConfig } from "../src/main/agent/config.js";
 import { buildAgent } from "../src/main/agent/agent.js";
 import { createCheckpointer } from "../src/main/agent/persistence.js";
 import { checkpointsPath } from "../src/main/agent/paths.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
 
 const cfg = loadConfig(["--yolo"]);
 const threadId = "persistence-test";

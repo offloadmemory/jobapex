@@ -10,8 +10,12 @@
  * this file under `ELECTRON_RUN_AS_NODE=1 electron` — tsx via Electron's
  * runtime, i.e. the exact Node the main process uses.
  */
+import { requireIsolatedHome } from "./lib/isolated-home.js";
 import { runTask, resolveApproval } from "../src/main/agent/runtime.js";
 import type { WireEvent } from "../src/shared/wire.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
 
 const events: WireEvent[] = [];
 let approvalRunId: string | null = null;
