@@ -8,6 +8,11 @@ import { skillsDir } from "../src/main/agent/paths.js";
 import { loadSkill, writeSkill } from "../src/main/agent/skills/tools.js";
 import { parseSkillMetadata } from "deepagents";
 
+import { requireIsolatedHome } from "./lib/isolated-home.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
+
 // Seed a skill so list/load has something to find.
 const seed = path.join(skillsDir(), "demo-skill");
 fs.mkdirSync(seed, { recursive: true });

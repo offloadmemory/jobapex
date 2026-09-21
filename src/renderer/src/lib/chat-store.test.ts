@@ -44,7 +44,7 @@ describe("ChatStore", () => {
       {
         type: "approval",
         runId: "r1",
-        request: { actionRequests: [{ name: "execute", args: { command: "ls" } }] },
+        request: { actionRequests: [{ name: "execute", args: { command: "ls" }, allowedDecisions: ["approve", "reject"] }] },
       },
     ]);
     expect(s.status).toBe("approval");
@@ -52,8 +52,16 @@ describe("ChatStore", () => {
   });
 
   it("updates todos from a todos event", () => {
-    const s = storeWith([{ type: "todos", todos: [{ content: "x", status: "pending" }] }]);
+    const s = storeWith([{ type: "todos", depth: 0, todos: [{ content: "x", status: "pending" }] }]);
     expect(s.todos).toEqual([{ content: "x", status: "pending" }]);
+  });
+
+  it("ignores a subagent plan so it cannot overwrite the main todo panel", () => {
+    const s = storeWith([
+      { type: "todos", depth: 0, todos: [{ content: "main", status: "pending" }] },
+      { type: "todos", depth: 1, todos: [{ content: "sub", status: "completed" }] },
+    ]);
+    expect(s.todos).toEqual([{ content: "main", status: "pending" }]);
   });
 
   it("emits a visible snapshot for a second approval after clearApproval", () => {
@@ -61,14 +69,14 @@ describe("ChatStore", () => {
     s.consume({
       type: "approval",
       runId: "r1",
-      request: { actionRequests: [{ name: "execute", args: { command: "ls" } }] },
+      request: { actionRequests: [{ name: "execute", args: { command: "ls" }, allowedDecisions: ["approve", "reject"] }] },
     });
     s.clearApproval();
     const before = s.getSnapshot();
     s.consume({
       type: "approval",
       runId: "r2",
-      request: { actionRequests: [{ name: "execute", args: { command: "pwd" } }] },
+      request: { actionRequests: [{ name: "execute", args: { command: "pwd" }, allowedDecisions: ["approve", "reject"] }] },
     });
     expect(s.approval?.runId).toBe("r2");
     expect(s.getSnapshot()).toBeGreaterThan(before);
@@ -77,7 +85,7 @@ describe("ChatStore", () => {
   it("reset clears all state back to an idle blank thread", () => {
     const s = storeWith([
       { type: "token", depth: 0, msg: { type: "ai", content: "hi", reasoning: "think" } },
-      { type: "todos", todos: [{ content: "x", status: "pending" }] },
+      { type: "todos", depth: 0, todos: [{ content: "x", status: "pending" }] },
       { type: "approval", runId: "r1", request: { actionRequests: [] } },
     ]);
     s.addEntry("user", "hello");
@@ -128,7 +136,7 @@ describe("ChatStore", () => {
       {
         type: "approval",
         runId: "r1",
-        request: { actionRequests: [{ name: "execute", args: { command: "ls" } }] },
+        request: { actionRequests: [{ name: "execute", args: { command: "ls" }, allowedDecisions: ["approve", "reject"] }] },
       },
       { type: "done", cancelled: false },
     ]);

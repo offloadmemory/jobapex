@@ -1,4 +1,4 @@
-import type { HITLRequestWire, Todo, WireEvent, WireMsg } from "@shared/wire";
+import type { HITLRequestWire, ThreadHistoryMessage, Todo, WireEvent, WireMsg } from "@shared/wire";
 
 export type EntryKind =
   | "user"
@@ -34,10 +34,27 @@ export function friendlyError(raw: string): string {
   return raw;
 }
 
+/** Most recent entry of a kind — the retry target for a failed run. */
+export function lastEntryOf(entries: TranscriptEntry[], kind: EntryKind): TranscriptEntry | null {
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i];
+    if (entry && entry.kind === kind) return entry;
+  }
+  return null;
+}
+
 export interface ApprovalState {
   runId: string;
   request: HITLRequestWire;
 }
+
+/** Checkpointer roles map onto the transcript kinds the Thread renderer knows. */
+const HISTORY_KINDS: Record<ThreadHistoryMessage["role"], EntryKind> = {
+  user: "user",
+  assistant: "assistant",
+  tool: "toolResult",
+  system: "system",
+};
 
 export class ChatStore {
   entries: TranscriptEntry[] = [];
@@ -87,6 +104,23 @@ export class ChatStore {
     this.emit();
   }
 
+  /** Replay a stored thread's history into the transcript (resume from Threads). */
+  loadHistory(messages: ThreadHistoryMessage[]): void {
+    this.entries = messages
+      .filter((message) => message.content.trim().length > 0)
+      .map((message) => ({
+        id: this.nextId++,
+        kind: HISTORY_KINDS[message.role],
+        text: message.content,
+        depth: 0,
+      }));
+    this.todos = [];
+    this.live = null;
+    this.approval = null;
+    this.status = "idle";
+    this.emit();
+  }
+
   /** Wipe everything and return to a blank idle thread ("New thread"). */
   reset(): void {
     this.entries = [];
@@ -106,7 +140,10 @@ export class ChatStore {
         this.consumeUpdate(ev.msg, ev.depth);
         break;
       case "todos":
-        this.setTodos(ev.todos);
+        // A subagent (depth > 0) keeps its own plan; only the main thread's
+        // plan may drive the TodoPanel, otherwise a subagent's list would
+        // replace the user's view of the run.
+        if (ev.depth === 0) this.setTodos(ev.todos);
         break;
       case "drain":
         this.flushLive();

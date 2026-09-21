@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Typecheck and unit tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm test` is the typecheck for both TS projects; vitest then covers the
+      # pure surfaces under src/**/*.test.ts. The live scripts in scripts/ drive
+      # real Electron main-process state (a running Ollama, ~/.deepagents), so
+      # CI never runs them: vitest aliases better-sqlite3 to a stub, which is why
+      # the Node-ABI build produced by `npm ci` is enough here.
+      - name: Typecheck
+        run: npm test
+
+      - name: Unit tests
+        run: npm run test:unit

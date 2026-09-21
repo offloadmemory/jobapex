@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toWireEvents } from "./runtime.js";
+import { resolveApproval, toWireEvents } from "./runtime.js";
 import type { StreamEvent } from "./stream-events.js";
 
 describe("toWireEvents", () => {
@@ -49,7 +49,7 @@ describe("toWireEvents", () => {
     ]);
   });
 
-  it("emits a todos event from a node update", () => {
+  it("emits a todos event carrying the top-level depth", () => {
     const ev: StreamEvent = {
       kind: "update",
       depth: 0,
@@ -59,8 +59,25 @@ describe("toWireEvents", () => {
     };
     const out = toWireEvents(ev);
     expect(out).toEqual([
-      { type: "todos", todos: [{ content: "do it", status: "in_progress" }] },
+      { type: "todos", depth: 0, todos: [{ content: "do it", status: "in_progress" }] },
     ]);
+  });
+
+  it("marks a subagent's plan with its nesting depth", () => {
+    const ev: StreamEvent = {
+      kind: "update",
+      depth: 2,
+      update: {
+        model: { todos: [{ content: "delegate", status: "pending" }] },
+      },
+    };
+    expect(toWireEvents(ev)).toEqual([
+      { type: "todos", depth: 2, todos: [{ content: "delegate", status: "pending" }] },
+    ]);
+  });
+
+  it("refuses a decision for a gate that is not open", () => {
+    expect(resolveApproval("no-such-run", { decisions: [{ type: "approve" }] })).toBe(false);
   });
 
   it("skips __interrupt__ keys", () => {

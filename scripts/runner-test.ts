@@ -10,6 +10,11 @@ import { buildAgent } from "../src/main/agent/agent.js";
 import { runAgentTask, type TaskCallbacks, type TaskResult } from "../src/main/agent/agent-runner.js";
 import { truncate } from "../src/main/agent/stream-events.js";
 
+import { requireIsolatedHome } from "./lib/isolated-home.js";
+
+// Refuses to run without the temp HOME the npm script sets.
+requireIsolatedHome();
+
 const agent = buildAgent(loadConfig([])); // gate ON
 let approvals = 0;
 let tokenLines = 0;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toThreadMessage } from "./to-thread-message";
+import { messageDepth, toThreadMessage } from "./to-thread-message";
 import type { TranscriptEntry } from "./chat-store";
 
 describe("toThreadMessage", () => {
@@ -41,5 +41,17 @@ describe("toThreadMessage", () => {
       role: "assistant",
       content: [{ type: "text", text: "" }],
     });
+  });
+
+  it("carries a nested entry's depth on the message metadata", () => {
+    const e: TranscriptEntry = { id: 6, kind: "assistant", text: "nested", depth: 1 };
+    const message = toThreadMessage(e);
+    expect(message).toEqual({
+      role: "assistant",
+      content: [{ type: "text", text: "nested" }],
+      metadata: { custom: { depth: 1 } },
+    });
+    expect(messageDepth(message)).toBe(1);
+    expect(messageDepth(toThreadMessage({ id: 7, kind: "assistant", text: "main", depth: 0 }))).toBe(0);
   });
 });

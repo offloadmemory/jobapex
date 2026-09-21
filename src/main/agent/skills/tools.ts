@@ -3,10 +3,7 @@ import path from "node:path";
 import { tool } from "langchain";
 import * as z from "zod";
 import { skillsDir } from "../paths.js";
-
-const FRONTMATTER = (name: string, description: string) =>
-  // JSON.stringify emits a valid YAML double-quoted scalar (colons/quotes/newlines safe).
-  `---\nname: ${name}\ndescription: ${JSON.stringify(description)}\n---\n`;
+import { renderSkillFile } from "./file.js";
 
 /**
  * Propose a new reusable skill. Gated by interruptOn: the HITL gate pauses
@@ -17,7 +14,7 @@ export const writeSkill = tool(
   async ({ name, description, content }: { name: string; description: string; content: string }) => {
     const dir = path.join(skillsDir(), name);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, "SKILL.md"), FRONTMATTER(name, description) + content + "\n");
+    fs.writeFileSync(path.join(dir, "SKILL.md"), renderSkillFile({ name, description, content }));
     return `Skill "${name}" written to ${dir}. It is now available to load in future sessions.`;
   },
   {

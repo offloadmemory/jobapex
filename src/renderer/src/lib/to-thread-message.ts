@@ -18,13 +18,33 @@ interface ToolResultData {
   isError: boolean;
 }
 
+/** Depth carried by {@link toThreadMessage}; 0 for main-thread messages. */
+export function messageDepth(message: {
+  metadata?: { custom?: Record<string, unknown> } | undefined;
+}): number {
+  const depth = message.metadata?.custom?.["depth"];
+  return typeof depth === "number" ? depth : 0;
+}
+
 /**
  * Map transcript entries to assistant-ui messages. Structured events
  * (tool calls, results, delegation, errors) become typed data parts so the
  * Thread can register purpose-built components for each instead of rendering
  * raw text lines.
+ *
+ * The entry's depth rides on `metadata.custom` — the one field assistant-ui
+ * copies through `fromThreadMessageLike` untouched and still exposes on the
+ * message state — so nested (subagent) output stays distinguishable from the
+ * main thread's own messages once it reaches the Thread.
  */
 export function toThreadMessage(entry: TranscriptEntry): ThreadMessageLike {
+  const message = toBaseMessage(entry);
+  return entry.depth > 0
+    ? { ...message, metadata: { custom: { depth: entry.depth } } }
+    : message;
+}
+
+function toBaseMessage(entry: TranscriptEntry): ThreadMessageLike {
   switch (entry.kind) {
     case "user":
       return { role: "user", content: [{ type: "text", text: entry.text }] };

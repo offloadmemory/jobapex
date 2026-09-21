@@ -4,11 +4,16 @@ import path from "node:path";
 import { createMemoryMiddleware, FilesystemBackend } from "deepagents";
 import { AGENT_NAME } from "./paths.js";
 
-const DEFAULT_AGENT_MD = `# ${AGENT_NAME} — identity
+/** Identity template for a given assistant name (the setup wizard names the assistant). */
+export function renderDefaultAgentMd(name: string): string {
+  return `# ${name} — identity
 
-You are ${AGENT_NAME}, a personal assistant. Add your standing preferences,
+You are ${name}, a personal assistant. Add your standing preferences,
 identity, and instructions here. This file is loaded into every session.
 `;
+}
+
+const DEFAULT_AGENT_MD = renderDefaultAgentMd(AGENT_NAME);
 
 /** Absolute path to the user-level identity file, created with a default if missing. */
 function userAgentMdPath(): string {
